@@ -14,6 +14,7 @@ use crate::database::Database;
 //
 // Must receive:
 // {
+//  "from": string,
 //  "name": string
 // }
 //
@@ -28,20 +29,16 @@ use crate::database::Database;
 pub fn handler(message: Json<Message>, session: State<RwLock<Session>>, db: State<Database>) -> Json<Answer> {
     let mut code = 0;
 
-    if message.name.is_empty() {
+    if message.name.is_empty() || message.from.is_empty() {
         code = 1;
+    } else if !session.read().unwrap().is_id_from_user(&message.from, &message.name) {
+        code = 2;
     } else {
-        /* Gets the user session ID, if it's logged */
-        let _ = match session.read().unwrap().get_id(&message.name) {
-            None => (),
-            Some(id) => {
-                /* Deletes the user session */
-                session.write().unwrap().delete(id);
-            }
-        };
+        /* Deletes the user session */
+        session.write().unwrap().delete(&message.from);
 
         if !db.delete_user(&message.name) {
-            code = 2;
+            code = 3;
         }
     }
 
