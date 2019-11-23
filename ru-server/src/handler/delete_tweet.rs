@@ -15,6 +15,7 @@ use crate::database::Database;
 // Must receive:
 // {
 //  "from": string,
+//  "name": string,
 //  "id": string
 // }
 //
@@ -29,12 +30,14 @@ use crate::database::Database;
 pub fn handler(message: Json<Message>, session: State<RwLock<Session>>, db: State<Database>) -> Json<Answer> {
     let mut code = 0;
 
-    if message.from.is_empty() || message.id.is_empty() {
+    if message.from.is_empty() || message.id.is_empty() || message.name.is_empty() {
         code = 1;
     } else if !session.read().unwrap().is_logged_with_id(&message.from) {
         code = 2;
-    } else if !db.delete_tweet(&message.from, &message.id) {
+    } else if !session.read().unwrap().is_id_from_user(&message.from, &message.name) {
         code = 3;
+    } else if !db.delete_tweet(&message.name, &message.id) {
+        code = 4;
     }
 
     Json(Answer::new(code))
