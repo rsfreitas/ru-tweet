@@ -30,6 +30,7 @@ fn main() {
                     .mount("/addTweet", routes![handler::add_tweet::handler])
                     .mount("/deleteTweet", routes![handler::delete_tweet::handler])
                     .mount("/listTweet", routes![handler::list_tweet::handler])
+                    .mount("/getTweet", routes![handler::get_tweet::handler])
                     .manage(RwLock::new(s))
                     .manage(db)
                     .launch();

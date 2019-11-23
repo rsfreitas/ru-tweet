@@ -36,5 +36,13 @@ impl Answer {
             tweets: tweets,
         }
     }
+
+    pub fn new_with_tweet(code: u32, tweet: Tweet) -> Answer {
+        Answer {
+            code: code,
+            id: "".to_string(),
+            tweets: vec![tweet],
+        }
+    }
 }
 

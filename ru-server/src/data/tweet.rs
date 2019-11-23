@@ -17,5 +17,14 @@ impl Tweet {
             timestamp: "".to_string(),
         }
     }
+
+    pub fn new_empty() -> Tweet {
+        Tweet{
+            from: "".to_string(),
+            content: "".to_string(),
+            id: "".to_string(),
+            timestamp: "".to_string(),
+        }
+    }
 }
 

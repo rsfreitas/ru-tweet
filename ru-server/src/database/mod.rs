@@ -1,6 +1,7 @@
 
 use mongodb::{Client, ThreadedClient};
 use mongodb::db::ThreadedDatabase;
+use mongodb::oid::ObjectId;
 use mongodb::Bson;
 
 use crate::data::tweet::Tweet;
@@ -83,7 +84,7 @@ impl Database {
         let coll = self.client.db("rutweet").collection("tweet");
         let doc = doc!{
             "from": from,
-            "id": id,
+            "_id": ObjectId::with_string(id).unwrap(),
         };
 
         match coll.delete_one(doc.clone(), None) {
@@ -100,6 +101,25 @@ impl Database {
             Bson::String(s) => Some(s.to_string()),
             Bson::ObjectId(oid) => Some(oid.to_hex()),
             _ => None
+        }
+    }
+
+    pub fn get_tweet(&self, from: &str, id: &str) -> Option<Tweet> {
+        let coll = self.client.db("rutweet").collection("tweet");
+        let doc = doc!{
+            "from": from,
+            "_id": ObjectId::with_string(id).unwrap(),
+        };
+
+        match coll.find_one(Some(doc.clone()), None) {
+            Err(_) => None,
+            Ok(d) => match d {
+                None => None,
+                Some(item) =>
+                    Some(Tweet::new(&Database::to_string(item.get("from").unwrap()).unwrap(),
+                                    &Database::to_string(item.get("content").unwrap()).unwrap(),
+                                    &Database::to_string(item.get("_id").unwrap()).unwrap()))
+            }
         }
     }
 
