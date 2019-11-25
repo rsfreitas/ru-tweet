@@ -4,7 +4,7 @@ use mongodb::db::ThreadedDatabase;
 use mongodb::oid::ObjectId;
 use mongodb::Bson;
 
-use crate::data::tweet::Tweet;
+use crate::data::tweet::{Tweet, Kind};
 
 pub struct Database {
     client: Client,
@@ -78,11 +78,12 @@ impl Database {
         }
     }
 
-    pub fn add_tweet(&self, from: &str, content: &str) -> Option<String> {
+    pub fn add_tweet(&self, from: &str, content: &str, kind: Kind) -> Option<String> {
         let coll = self.client.db("rutweet").collection("tweet");
         let doc = doc!{
             "from": from,
             "content": content,
+            "kind": kind.to_bson(),
         };
 
         let res = match coll.insert_one(doc.clone(), None) {
@@ -131,10 +132,26 @@ impl Database {
             Err(_) => None,
             Ok(d) => match d {
                 None => None,
-                Some(item) =>
+                Some(item) => {
+                    let like = match item.get("like") {
+                        None => 0,
+                        Some(i) => i.as_i32().unwrap()
+                    };
+
+                    let kind = match item.get("kind") {
+                        None => Kind::Simple,
+                        Some(b) => match Kind::from_bson(b) {
+                            None => Kind::Simple,
+                            Some(k) => k
+                        }
+                    };
+
                     Some(Tweet::new(&Database::to_string(item.get("from").unwrap()).unwrap(),
                                     &Database::to_string(item.get("content").unwrap()).unwrap(),
-                                    &Database::to_string(item.get("_id").unwrap()).unwrap()))
+                                    &Database::to_string(item.get("_id").unwrap()).unwrap(),
+                                    like,
+                                    kind))
+                }
             }
         }
     }
@@ -150,9 +167,25 @@ impl Database {
 
         for result in cursor {
             if let Ok(item) = result {
+                let like = match item.get("like") {
+                    None => 0,
+                    Some(i) => i.as_i32().unwrap()
+                };
+
+                let kind = match item.get("kind") {
+                    None => Kind::Simple,
+                    Some(b) => match Kind::from_bson(b) {
+                        None => Kind::Simple,
+                        Some(k) => k
+                    }
+                };
+
+
                 tweets.push(Tweet::new(&Database::to_string(item.get("from").unwrap()).unwrap(),
                                        &Database::to_string(item.get("content").unwrap()).unwrap(),
-                                       &Database::to_string(item.get("_id").unwrap()).unwrap()));
+                                       &Database::to_string(item.get("_id").unwrap()).unwrap(),
+                                       like,
+                                       kind))
             }
         }
 

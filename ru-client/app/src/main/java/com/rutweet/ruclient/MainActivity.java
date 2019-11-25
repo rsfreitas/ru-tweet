@@ -57,7 +57,6 @@ public class MainActivity extends AppCompatActivity {
 
     @Override
     public boolean onOptionsItemSelected(MenuItem item) {
-        // Handle item selection
         switch (item.getItemId()) {
         case R.id.action_follow:
             followUser(credentials);
@@ -79,7 +78,6 @@ public class MainActivity extends AppCompatActivity {
         builder.setPositiveButton("OK", new DialogInterface.OnClickListener() {
             @Override
             public void onClick(DialogInterface dialog, int which) {
-                // TODO: follow method
                 switch (User.Follow(credentials.Id(), input.getText().toString())) {
                 case 3:
                     Toast.makeText(MainActivity.this, "User does not exist",
@@ -123,7 +121,9 @@ public class MainActivity extends AppCompatActivity {
         builder.setPositiveButton("OK", new DialogInterface.OnClickListener() {
             @Override
             public void onClick(DialogInterface dialog, int which) {
-                Tweet.New(credentials.Username(), input.getText().toString());
+                Tweet.New(credentials.Username(), credentials.Id(),
+                          input.getText().toString());
+
                 dialog.cancel();
 
                 // TODO: if we're on page 0 update the listview

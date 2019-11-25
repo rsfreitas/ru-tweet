@@ -3,6 +3,7 @@ package com.rutweet.ruclient.ui.main;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
+import java.util.Locale;
 import java.util.Map;
 
 import android.os.Bundle;
@@ -35,7 +36,7 @@ public class PersonalFragment extends Fragment {
     public void onActivityCreated(Bundle savedInstanceState) {
         super.onActivityCreated(savedInstanceState);
 
-        Tweet[] tweets = Tweet.ListTweets(credentials.Id(), credentials.Username());
+        Tweet[] tweets = Tweet.ListTweets(credentials.Username());
 
         if (tweets == null)
             return;
@@ -46,8 +47,9 @@ public class PersonalFragment extends Fragment {
 
         for (Tweet t : tweets) {
             HashMap<String, String> item = new HashMap<>();
-            // Timestamp: %s Like: %d
-            item.put("timestamp", t.Timestamp());
+            item.put("timestamp", String.format(Locale.getDefault(), "Timestamp: %s Like: %d",
+                                                t.Timestamp(), t.Like()));
+
             item.put("content", t.Content());
 
             itemDataList.add(item);
@@ -57,7 +59,7 @@ public class PersonalFragment extends Fragment {
                 getActivity(),
                 itemDataList,android.R.layout.simple_list_item_2,
                 new String[]{"timestamp", "content"},
-                new int[]{android.R.id.text1, android.R.id.text2}
+                new int[]{android.R.id.text2, android.R.id.text1}
          );
 
         listView.setAdapter(simpleAdapter);

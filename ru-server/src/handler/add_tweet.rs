@@ -7,6 +7,7 @@ use rocket_contrib::json::Json;
 use crate::data::session::Session;
 use crate::data::message::Message;
 use crate::data::answer::Answer;
+use crate::data::tweet::Kind;
 use crate::database::Database;
 
 //
@@ -14,6 +15,7 @@ use crate::database::Database;
 //
 // Must receive:
 // {
+//  "name": string,
 //  "from": string,
 //  "content": string,
 // }
@@ -31,13 +33,15 @@ pub fn handler(message: Json<Message>, session: State<RwLock<Session>>, db: Stat
     let mut code = 0;
     let mut id = String::new();
 
-    if message.from.is_empty() || message.content.is_empty() {
-        code = 1;
-    } else if !session.read().unwrap().is_logged(&message.from) {
-        code = 2;
+    if message.name.is_empty() || message.content.is_empty() || message.from.is_empty() {
+        code = 1; // invalid fields
+    } else if !session.read().unwrap().is_id_from_user(&message.from, &message.name) {
+        code = 2; // ID is not from user (name)
+    } else if !session.read().unwrap().is_logged(&message.name) {
+        code = 3; // the user is not logged
     } else {
-        match db.add_tweet(&message.from, &message.content) {
-            None => code = 3,
+        match db.add_tweet(&message.name, &message.content, Kind::Simple) {
+            None => code = 4, // database insertion error
             Some(tid) => id = tid
         };
     }

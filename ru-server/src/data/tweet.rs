@@ -1,20 +1,58 @@
 
+use mongodb::Bson;
+
+#[derive(Debug, Serialize, Deserialize)]
+pub enum Kind {
+    Simple,
+    Retweet
+}
+
+impl Kind {
+    pub fn to_bson(&self) -> Bson {
+        let s = match self {
+            Kind::Simple => "simple",
+            Kind::Retweet => "retweet"
+        };
+
+        Bson::String(s.to_string())
+    }
+
+    pub fn from_bson(b: &Bson) -> Option<Kind> {
+        match b {
+            Bson::String(s) => {
+                let k = s.to_string();
+                match k.as_ref() {
+                    "simple" => Some(Kind::Simple),
+                    "retweet" => Some(Kind::Retweet),
+                    _ => None,
+                };
+                None
+            },
+            _ => None
+        }
+    }
+}
+
 #[derive(Debug, Serialize, Deserialize)]
 pub struct Tweet {
-    pub from: String,
-    pub content: String,
-
+    from: String,
+    content: String,
     id: String,
     timestamp: String,
+    like: i32,
+    kind: Kind,
+    parent_id: String,
 }
 
 impl Tweet {
-    pub fn new(from: &str, content: &str, id: &str) -> Tweet {
+    pub fn new(from: &str, content: &str, id: &str, like: i32, kind: Kind) -> Tweet {
         Tweet{
             from: from.to_string(),
             content: content.to_string(),
             id: id.to_string(),
             timestamp: "".to_string(),
+            like: like,
+            kind: kind,
         }
     }
 
@@ -24,6 +62,8 @@ impl Tweet {
             content: "".to_string(),
             id: "".to_string(),
             timestamp: "".to_string(),
+            like: 0,
+            kind: Kind::Simple,
         }
     }
 }

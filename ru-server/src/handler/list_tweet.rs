@@ -14,8 +14,8 @@ use crate::database::Database;
 //
 // Must receive:
 // {
-//  "from": string,
-//  "name": string
+//  "name": string,
+//  "from": string (optional)
 // }
 //
 // It will always return a 200 code with an internal code of what really
@@ -31,12 +31,17 @@ pub fn handler(message: Json<Message>, session: State<RwLock<Session>>, db: Stat
     let mut code = 0;
     let mut tweets = vec![];
 
-    if message.from.is_empty() {
+    if message.name.is_empty() {
         code = 1;
-    } else if !session.read().unwrap().is_logged_with_id(&message.from) {
+    } else if !session.read().unwrap().is_logged(&message.name) {
         code = 2;
     } else {
-        tweets = db.list_tweet(&message.name);
+        /*
+         * We can list the tweets of the own user or tweets from another one. To
+         * do this we must receive "from" with the name of this user.
+         */
+        let s = if !message.from.is_empty() { &message.from } else { &message.name };
+        tweets = db.list_tweet(&s);
     }
 
     let answer = match code {

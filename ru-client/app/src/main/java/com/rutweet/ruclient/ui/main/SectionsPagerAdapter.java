@@ -33,28 +33,28 @@ public class SectionsPagerAdapter extends FragmentPagerAdapter {
 
     @Override
     public Fragment getItem(int position) {
-        Fragment fragment;
+        Fragment fragment = null;
 
         Bundle bundle = new Bundle();
         bundle.putSerializable("credentials", credentials);
 
-        // getItem is called to instantiate the fragment for the given page.
-        // Return a PlaceholderFragment (defined as a static inner class below).
         switch (position) {
         case 0:
             fragment = new PersonalFragment();
             break;
 
+        case 1:
+            System.out.println("Creating");
+            fragment = new TimelineFragment();
+            break;
+
         case 2:
             fragment = new FollowingFragment();
             break;
-
-        default:
-            fragment = PlaceholderFragment.newInstance(position + 1);
-            break;
         }
 
-        fragment.setArguments(bundle);
+        if (fragment != null)
+            fragment.setArguments(bundle);
 
         return fragment;
     }
