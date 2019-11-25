@@ -14,7 +14,8 @@ use crate::database::Database;
 //
 // Must receive:
 // {
-//  "name": string
+//  "name": string,
+//  "password": string
 // }
 //
 // It will always return a 200 code with an internal code of what really
@@ -31,11 +32,15 @@ pub fn handler(message: Json<Message>, session: State<RwLock<Session>>, db: Stat
     let mut id = String::new();
     let mut session = session.write().unwrap();
 
-    if message.name.is_empty() || !db.user_exists(&message.name) {
+    if message.name.is_empty() || !db.check_user_and_password(&message.name, &message.password) {
         code = 1;
     } else {
+        /* If the user is already logged we return 0 and its ID */
         if session.is_logged(&message.name) {
-            code = 2;
+            match session.get_id(&message.name) {
+                Some(sid) => id = sid,
+                None => code = 2
+            };
         } else {
             match session.add(&message.name) {
                 Some(sid) => id = sid,

@@ -9,7 +9,7 @@ use crate::data::message::Message;
 use crate::data::answer::Answer;
 
 //
-// logout handler.
+// is_logged handler.
 //
 // Must receive:
 // {
@@ -31,7 +31,7 @@ pub fn handler(message: Json<Message>, session: State<RwLock<Session>>) -> Json<
         code = 1;
     }
 
-    if !session.write().unwrap().delete(&message.id) {
+    if !session.read().unwrap().is_logged_with_id(&message.id) {
         code = 2;
     }
 

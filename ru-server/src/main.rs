@@ -27,6 +27,7 @@ fn main() {
                     .mount("/deleteUser", routes![handler::delete_user::handler])
                     .mount("/login", routes![handler::login::handler])
                     .mount("/logout", routes![handler::logout::handler])
+                    .mount("/isLogged", routes![handler::is_logged::handler])
                     .mount("/addTweet", routes![handler::add_tweet::handler])
                     .mount("/deleteTweet", routes![handler::delete_tweet::handler])
                     .mount("/listTweet", routes![handler::list_tweet::handler])

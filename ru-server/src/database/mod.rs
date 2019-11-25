@@ -62,6 +62,22 @@ impl Database {
         }
     }
 
+    pub fn check_user_and_password(&self, username: &str, password: &str) -> bool {
+        let coll = self.client.db("rutweet").collection("users");
+        let doc = doc!{
+            "name": username,
+            "password": password,
+        };
+
+        match coll.find_one(Some(doc.clone()), None) {
+            Err(_) => false,
+            Ok(d) => match d {
+                None => false,
+                Some(_) => true
+            }
+        }
+    }
+
     pub fn add_tweet(&self, from: &str, content: &str) -> Option<String> {
         let coll = self.client.db("rutweet").collection("tweet");
         let doc = doc!{

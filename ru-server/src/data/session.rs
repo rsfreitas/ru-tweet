@@ -35,10 +35,10 @@ impl Session {
         }
     }
 
-    pub fn get_id(&self, username: &str) -> Option<&str> {
+    pub fn get_id(&self, username: &str) -> Option<String> {
         for (id, user) in self.active_users.iter() {
-            if id.eq(username) {
-                return Some(&user.name)
+            if user.name.eq(username) {
+                return Some(id.to_string())
             }
         }
 
