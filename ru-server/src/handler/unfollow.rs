@@ -10,7 +10,7 @@ use crate::data::answer::Answer;
 use crate::database::Database;
 
 //
-// follow handler.
+// unfollow handler.
 //
 // Must receive:
 // {
