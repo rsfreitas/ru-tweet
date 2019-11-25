@@ -35,6 +35,7 @@ fn main() {
                     .mount("/follow", routes![handler::follow::handler])
                     .mount("/unfollow", routes![handler::unfollow::handler])
                     .mount("/following", routes![handler::following::handler])
+                    .mount("/like", routes![handler::like::handler])
                     .manage(RwLock::new(s))
                     .manage(db)
                     .launch();

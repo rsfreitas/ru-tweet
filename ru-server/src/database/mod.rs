@@ -255,5 +255,35 @@ impl Database {
             }
         }
     }
+
+    pub fn increment_tweet_like(&self, id: &str) -> bool {
+        let coll = self.client.db("rutweet").collection("tweet");
+        let doc = doc!{
+            "_id": ObjectId::with_string(id).unwrap(),
+        };
+
+        match coll.find_one(Some(doc.clone()), None) {
+            Err(_) => false,
+            Ok(d) => match d {
+                None => false,
+                Some(item) => {
+                    let like = match item.get("like") {
+                        None => 1,
+                        Some(l) => l.as_i32().unwrap() + 1
+                    };
+
+                    match coll.update_one(doc,
+                                          doc!{"$set": {
+                                              "like": like
+                                          }},
+                                          None)
+                    {
+                        Err(_) => false,
+                        Ok(_) => true
+                    }
+                }
+            }
+        }
+    }
 }
 
