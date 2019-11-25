@@ -1,0 +1,7 @@
+<resources>
+    <string name="app_name">ru-client</string>
+    <string name="tab_text_1">Timeline</string>
+    <string name="tab_text_2">Personal</string>
+    <string name="tab_text_3">Following</string>
+    <string name="tab_text_4">Messages</string>
+</resources>
