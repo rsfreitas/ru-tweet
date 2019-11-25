@@ -1,9 +1,9 @@
 package com.rutweet.ruclient.ipc;
 
+import java.util.HashMap;
+
 import com.rutweet.ruclient.common.Credentials;
 import com.rutweet.ruclient.net.CallServer;
-
-import java.util.HashMap;
 
 public class Login {
     /*

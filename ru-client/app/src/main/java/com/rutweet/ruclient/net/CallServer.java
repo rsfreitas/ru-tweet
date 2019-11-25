@@ -1,12 +1,12 @@
 package com.rutweet.ruclient.net;
 
-import android.os.AsyncTask;
-
-import com.rutweet.ruclient.ipc.Answer;
-
 import java.util.HashMap;
 import java.util.Locale;
 import java.util.concurrent.TimeUnit;
+
+import android.os.AsyncTask;
+
+import com.rutweet.ruclient.ipc.Answer;
 
 public class CallServer {
     private static String host;

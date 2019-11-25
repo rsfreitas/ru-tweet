@@ -35,6 +35,13 @@ public class Answer {
         return data.tweets;
     }
 
+    public String[] Following() {
+        if (empty)
+            return null;
+
+        return data.following;
+    }
+
     private class AnswerData {
         @SerializedName("id")
         String id;
@@ -44,5 +51,8 @@ public class Answer {
 
         @SerializedName("tweets")
         Tweet[] tweets;
+
+        @SerializedName("following")
+        String[] following;
     }
 }

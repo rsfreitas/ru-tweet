@@ -19,7 +19,7 @@ import com.rutweet.ruclient.common.Credentials;
 public class SectionsPagerAdapter extends FragmentPagerAdapter {
 
     @StringRes
-    private static final int[] TAB_TITLES = new int[]{R.string.tab_text_2, R.string.tab_text_1, R.string.tab_text_3, R.string.tab_text_4};
+    private static final int[] TAB_TITLES = new int[]{R.string.tab_text_2, R.string.tab_text_1, R.string.tab_text_3};
     private final Context mContext;
     private Credentials credentials;
 
@@ -67,6 +67,6 @@ public class SectionsPagerAdapter extends FragmentPagerAdapter {
 
     @Override
     public int getCount() {
-        return 4;
+        return 3;
     }
 }

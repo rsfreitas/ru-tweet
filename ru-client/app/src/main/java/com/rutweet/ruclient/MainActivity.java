@@ -15,9 +15,11 @@ import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
 import android.widget.EditText;
+import android.widget.Toast;
 
 import com.rutweet.ruclient.common.Credentials;
 import com.rutweet.ruclient.ipc.Tweet;
+import com.rutweet.ruclient.ipc.User;
 import com.rutweet.ruclient.ui.main.SectionsPagerAdapter;
 
 public class MainActivity extends AppCompatActivity {
@@ -78,7 +80,23 @@ public class MainActivity extends AppCompatActivity {
             @Override
             public void onClick(DialogInterface dialog, int which) {
                 // TODO: follow method
-                dialog.cancel();
+                switch (User.Follow(credentials.Id(), input.getText().toString())) {
+                case 3:
+                    Toast.makeText(MainActivity.this, "User does not exist",
+                                   Toast.LENGTH_LONG).show();
+
+                    break;
+
+                case 0:
+                    dialog.cancel();
+                    break;
+
+                default:
+                    Toast.makeText(MainActivity.this, "Error following user",
+                                   Toast.LENGTH_LONG).show();
+
+                    break;
+                }
 
                 // TODO: if we're on page 3 update the listview
             }

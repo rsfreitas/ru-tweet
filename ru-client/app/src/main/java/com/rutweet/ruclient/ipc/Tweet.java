@@ -1,9 +1,10 @@
 package com.rutweet.ruclient.ipc;
 
-import com.google.gson.annotations.SerializedName;
-import com.rutweet.ruclient.net.CallServer;
-
 import java.util.HashMap;
+
+import com.google.gson.annotations.SerializedName;
+
+import com.rutweet.ruclient.net.CallServer;
 
 public class Tweet {
     @SerializedName("from")

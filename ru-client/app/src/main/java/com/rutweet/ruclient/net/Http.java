@@ -1,7 +1,5 @@
 package com.rutweet.ruclient.net;
 
-import android.os.AsyncTask;
-
 import com.google.gson.Gson;
 
 import java.io.BufferedReader;
@@ -16,6 +14,8 @@ import java.util.HashMap;
 import java.util.Map;
 
 import javax.net.ssl.HttpsURLConnection;
+
+import android.os.AsyncTask;
 
 public class Http {
     private static String toURLEncoded(HashMap<String, String> data) throws UnsupportedEncodingException {

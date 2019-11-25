@@ -1,23 +1,22 @@
 package com.rutweet.ruclient.ui.main;
 
-import android.os.Bundle;
-import android.view.LayoutInflater;
-import android.view.View;
-import android.view.ViewGroup;
-import android.widget.ArrayAdapter;
-import android.widget.ListView;
-import android.widget.SimpleAdapter;
-
-import com.rutweet.ruclient.R;
-import com.rutweet.ruclient.common.Credentials;
-import com.rutweet.ruclient.ipc.Tweet;
-
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+import android.os.Bundle;
+import android.view.LayoutInflater;
+import android.view.View;
+import android.view.ViewGroup;
+import android.widget.ListView;
+import android.widget.SimpleAdapter;
+
 import androidx.fragment.app.Fragment;
+
+import com.rutweet.ruclient.R;
+import com.rutweet.ruclient.common.Credentials;
+import com.rutweet.ruclient.ipc.Tweet;
 
 public class PersonalFragment extends Fragment {
     private Credentials credentials;
@@ -47,6 +46,7 @@ public class PersonalFragment extends Fragment {
 
         for (Tweet t : tweets) {
             HashMap<String, String> item = new HashMap<>();
+            // Timestamp: %s Like: %d
             item.put("timestamp", t.Timestamp());
             item.put("content", t.Content());
 
