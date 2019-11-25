@@ -45,6 +45,13 @@ impl Session {
         None
     }
 
+    pub fn get_username(&self, id: &str) -> Option<String> {
+        match self.active_users.get(id) {
+            None => None,
+            Some(u) => Some(u.name.to_string())
+        }
+    }
+
     pub fn is_logged(&self, username: &str) -> bool {
         for user in self.active_users.values() {
             if user.name.eq(username) {

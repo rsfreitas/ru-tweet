@@ -15,5 +15,8 @@ pub struct Message {
 
     #[serde(default)]
     pub content: String,
+
+    #[serde(default)]
+    pub follow: String,
 }
 

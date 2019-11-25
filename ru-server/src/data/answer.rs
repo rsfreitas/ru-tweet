@@ -10,30 +10,36 @@ pub struct Answer {
 
     #[serde(default)]
     pub tweets: Vec<Tweet>,
+
+    #[serde(default)]
+    pub following: Vec<String>,
 }
 
 impl Answer {
     pub fn new(code: u32) -> Answer {
-        Answer{
+        Answer {
             code: code,
             id: "".to_string(),
             tweets: Vec::new(),
+            following: Vec::new(),
         }
     }
 
     pub fn new_with_id(code: u32, id: &str) -> Answer {
-        Answer{
+        Answer {
             code: code,
             id: id.to_string(),
             tweets: Vec::new(),
+            following: Vec::new(),
         }
     }
 
     pub fn new_with_tweets(code: u32, tweets: Vec<Tweet>) -> Answer {
-        Answer{
+        Answer {
             code: code,
             id: "".to_string(),
             tweets: tweets,
+            following: Vec::new(),
         }
     }
 
@@ -42,6 +48,16 @@ impl Answer {
             code: code,
             id: "".to_string(),
             tweets: vec![tweet],
+            following: Vec::new(),
+        }
+    }
+
+    pub fn new_with_following(code: u32, following: Vec<String>) -> Answer {
+        Answer {
+            code: code,
+            id: "".to_string(),
+            tweets: Vec::new(),
+            following: following,
         }
     }
 }

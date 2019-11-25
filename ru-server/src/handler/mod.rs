@@ -8,4 +8,7 @@ pub mod add_tweet;
 pub mod delete_tweet;
 pub mod list_tweet;
 pub mod get_tweet;
+pub mod follow;
+pub mod unfollow;
+pub mod following;
 

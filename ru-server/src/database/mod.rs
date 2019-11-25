@@ -158,5 +158,102 @@ impl Database {
 
         tweets
     }
+
+    pub fn follow_user(&self, username: &str, followed: &str) -> bool {
+        let coll = self.client.db("rutweet").collection("users");
+        let doc = doc!{
+            "name": username,
+        };
+
+        match coll.find_one(Some(doc.clone()), None) {
+            Err(_) => false,
+            Ok(d) => match d {
+                None => false,
+                Some(item) => {
+                    let mut f = match item.get("following") {
+                        None => vec![],
+                        Some(dbv) => dbv.as_array().unwrap().to_vec()
+                    };
+
+                    if !f.contains(&Bson::from(followed)) {
+                        f.push(Bson::from(followed));
+                    }
+
+                    match coll.update_one(doc,
+                                          doc!{"$set": {
+                                              "following": f.into_iter().map(Bson::from).collect::<Vec<_>>()
+                                          }},
+                                          None)
+                    {
+                        Err(_) => false,
+                        Ok(_) => true
+                    }
+                }
+            }
+        }
+    }
+
+    pub fn unfollow_user(&self, username: &str, followed: &str) -> bool {
+        let coll = self.client.db("rutweet").collection("users");
+        let doc = doc!{
+            "name": username,
+        };
+
+        match coll.find_one(Some(doc.clone()), None) {
+            Err(_) => false,
+            Ok(d) => match d {
+                None => false,
+                Some(item) => {
+                    let mut f = match item.get("following") {
+                        None => vec![],
+                        Some(dbv) => dbv.as_array().unwrap().to_vec()
+                    };
+
+                    if f.contains(&Bson::from(followed)) {
+                        f.retain(|b| !b.as_str().unwrap().eq(followed));
+                    }
+
+                    match coll.update_one(doc,
+                                          doc!{"$set": {
+                                              "following": f.into_iter().map(Bson::from).collect::<Vec<_>>()
+                                          }},
+                                          None)
+                    {
+                        Err(_) => false,
+                        Ok(_) => true
+                    }
+                }
+            }
+        }
+    }
+
+    pub fn get_following(&self, username: &str) -> Option<Vec<String>> {
+        let coll = self.client.db("rutweet").collection("users");
+        let doc = doc!{
+            "name": username,
+        };
+
+        match coll.find_one(Some(doc.clone()), None) {
+            Err(_) => None,
+            Ok(d) => match d {
+                None => None,
+                Some(item) => {
+                    match item.get("following") {
+                        None => None,
+                        Some(dbv) => {
+                            let v = dbv.as_array().unwrap().to_vec();
+                            let f = v.iter().fold(vec![],
+                                                  |mut acc, e| {
+                                                      acc.push(Database::to_string(e).unwrap());
+                                                      acc
+                                                  });
+
+                            Some(f)
+                        }
+                    }
+                }
+            }
+        }
+    }
 }
 
