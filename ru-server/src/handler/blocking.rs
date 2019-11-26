@@ -10,13 +10,11 @@ use crate::data::answer::Answer;
 use crate::database::Database;
 
 //
-// deleteTweet handler.
+// blocking handler.
 //
 // Must receive:
 // {
 //  "from": string,
-//  "name": string,
-//  "id": string
 // }
 //
 // It will always return a 200 code with an internal code of what really
@@ -24,22 +22,32 @@ use crate::database::Database;
 //
 // {
 //  "code": int
+//  "following": array of strings
 // }
 //
 #[post("/", format = "application/json", data = "<message>")]
 pub fn handler(message: Json<Message>, session: State<RwLock<Session>>, db: State<Database>) -> Json<Answer> {
     let mut code = 0;
+    let mut blocking = vec![];
 
-    if message.from.is_empty() || message.id.is_empty() || message.name.is_empty() {
+    if message.from.is_empty() {
         code = 1; // invalid fields
     } else if !session.read().unwrap().is_logged_with_id(&message.from) {
         code = 2; // the user is not logged at the moment
-    } else if !session.read().unwrap().is_id_from_user(&message.from, &message.name) {
-        code = 3; // ID is not from user (name)
-    } else if !db.delete_tweet(&message.name, &message.id) {
-        code = 4; // database error
+    } else {
+        let name = session.read().unwrap().get_username(&message.from).unwrap();
+
+        blocking = match db.get_blocking(&name) {
+            None => vec![],
+            Some(f) => f
+        };
     }
 
-    Json(Answer::new(code))
+    let answer = match code {
+        0 => Answer::new_with_blocking(code, blocking),
+        c @ _ => Answer::new(c)
+    };
+
+    Json(answer)
 }
 

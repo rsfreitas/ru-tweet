@@ -5,6 +5,7 @@ extern crate rocket_contrib;
 #[macro_use] extern crate serde_derive;
 #[macro_use(bson, doc)] extern crate mongodb;
 extern crate uuid;
+extern crate chrono;
 
 use std::sync::RwLock;
 
@@ -36,6 +37,11 @@ fn main() {
                     .mount("/unfollow", routes![handler::unfollow::handler])
                     .mount("/following", routes![handler::following::handler])
                     .mount("/like", routes![handler::like::handler])
+                    .mount("/dm", routes![handler::dm::handler])
+                    .mount("/listDm", routes![handler::list_dm::handler])
+                    .mount("/block", routes![handler::block::handler])
+                    .mount("/unblock", routes![handler::unblock::handler])
+                    .mount("/blocking", routes![handler::blocking::handler])
                     .manage(RwLock::new(s))
                     .manage(db)
                     .launch();

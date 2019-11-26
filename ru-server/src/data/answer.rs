@@ -1,5 +1,6 @@
 
 use super::tweet::Tweet;
+use super::dm::DM;
 
 #[derive(Serialize, Deserialize)]
 pub struct Answer {
@@ -13,6 +14,12 @@ pub struct Answer {
 
     #[serde(default)]
     pub following: Vec<String>,
+
+    #[serde(default)]
+    pub blocked: Vec<String>,
+
+    #[serde(default)]
+    pub dms: Vec<DM>,
 }
 
 impl Answer {
@@ -22,6 +29,8 @@ impl Answer {
             id: "".to_string(),
             tweets: Vec::new(),
             following: Vec::new(),
+            blocked: Vec::new(),
+            dms: Vec::new(),
         }
     }
 
@@ -31,6 +40,8 @@ impl Answer {
             id: id.to_string(),
             tweets: Vec::new(),
             following: Vec::new(),
+            blocked: Vec::new(),
+            dms: Vec::new(),
         }
     }
 
@@ -40,6 +51,8 @@ impl Answer {
             id: "".to_string(),
             tweets: tweets,
             following: Vec::new(),
+            blocked: Vec::new(),
+            dms: Vec::new(),
         }
     }
 
@@ -49,6 +62,8 @@ impl Answer {
             id: "".to_string(),
             tweets: vec![tweet],
             following: Vec::new(),
+            blocked: Vec::new(),
+            dms: Vec::new(),
         }
     }
 
@@ -58,6 +73,30 @@ impl Answer {
             id: "".to_string(),
             tweets: Vec::new(),
             following: following,
+            blocked: Vec::new(),
+            dms: Vec::new(),
+        }
+    }
+
+    pub fn new_with_blocking(code: u32, blocked: Vec<String>) -> Answer {
+        Answer {
+            code: code,
+            id: "".to_string(),
+            tweets: Vec::new(),
+            following: Vec::new(),
+            blocked: blocked,
+            dms: Vec::new(),
+        }
+    }
+
+    pub fn new_with_dms(code: u32, dms: Vec<DM>) -> Answer {
+        Answer {
+            code: code,
+            id: "".to_string(),
+            tweets: Vec::new(),
+            following: Vec::new(),
+            blocked: Vec::new(),
+            dms: dms,
         }
     }
 }

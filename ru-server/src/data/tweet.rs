@@ -1,4 +1,5 @@
 
+use chrono::Utc;
 use mongodb::Bson;
 
 #[derive(Debug, Serialize, Deserialize)]
@@ -41,27 +42,28 @@ pub struct Tweet {
     timestamp: String,
     like: i32,
     kind: Kind,
-    parent_id: String,
 }
 
 impl Tweet {
-    pub fn new(from: &str, content: &str, id: &str, like: i32, kind: Kind) -> Tweet {
+    pub fn new(from: &str, content: &str, id: &str, like: i32, kind: Kind, timestamp: &str) -> Tweet {
         Tweet{
             from: from.to_string(),
             content: content.to_string(),
             id: id.to_string(),
-            timestamp: "".to_string(),
+            timestamp: timestamp.to_string(),
             like: like,
             kind: kind,
         }
     }
 
     pub fn new_empty() -> Tweet {
+        let timestamp = Utc::now();
+
         Tweet{
             from: "".to_string(),
             content: "".to_string(),
             id: "".to_string(),
-            timestamp: "".to_string(),
+            timestamp: timestamp.to_rfc3339(),
             like: 0,
             kind: Kind::Simple,
         }

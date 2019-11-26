@@ -33,14 +33,14 @@ pub fn handler(message: Json<Message>, session: State<RwLock<Session>>, db: Stat
     let mut code = 0;
     let mut tweet = Tweet::new_empty();
 
-    if message.from.is_empty() || message.id.is_empty() {
-        code = 1;
+    if message.from.is_empty() || message.id.is_empty() || message.name.is_empty() {
+        code = 1; // invalid fields
     } else if !session.read().unwrap().is_logged_with_id(&message.from) {
-        code = 2;
+        code = 2; // the user is not logged at the moment
     } else {
         tweet = match db.get_tweet(&message.name, &message.id) {
             None => {
-                code = 3;
+                code = 3; // message not found
                 Tweet::new_empty()
             },
             Some(t) => t

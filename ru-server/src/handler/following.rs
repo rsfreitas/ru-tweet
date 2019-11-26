@@ -31,9 +31,9 @@ pub fn handler(message: Json<Message>, session: State<RwLock<Session>>, db: Stat
     let mut following = vec![];
 
     if message.from.is_empty() {
-        code = 1;
+        code = 1; // invalid fields
     } else if !session.read().unwrap().is_logged_with_id(&message.from) {
-        code = 2;
+        code = 2; // the user is not logged at the moment
     } else {
         let name = session.read().unwrap().get_username(&message.from).unwrap();
 

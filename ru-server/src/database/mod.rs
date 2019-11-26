@@ -1,10 +1,12 @@
 
+use chrono::Utc;
 use mongodb::{Client, ThreadedClient};
 use mongodb::db::ThreadedDatabase;
 use mongodb::oid::ObjectId;
 use mongodb::Bson;
 
 use crate::data::tweet::{Tweet, Kind};
+use crate::data::dm::DM;
 
 pub struct Database {
     client: Client,
@@ -84,6 +86,7 @@ impl Database {
             "from": from,
             "content": content,
             "kind": kind.to_bson(),
+            "timestamp": Utc::now(),
         };
 
         let res = match coll.insert_one(doc.clone(), None) {
@@ -146,11 +149,17 @@ impl Database {
                         }
                     };
 
+                    let timestamp = match item.get("timestamp") {
+                        None => Utc::now().to_rfc3339(),
+                        Some(d) => d.as_utc_date_time().unwrap().to_rfc3339()
+                    };
+
                     Some(Tweet::new(&Database::to_string(item.get("from").unwrap()).unwrap(),
                                     &Database::to_string(item.get("content").unwrap()).unwrap(),
                                     &Database::to_string(item.get("_id").unwrap()).unwrap(),
                                     like,
-                                    kind))
+                                    kind,
+                                    &timestamp))
                 }
             }
         }
@@ -180,12 +189,17 @@ impl Database {
                     }
                 };
 
+                let timestamp = match item.get("timestamp") {
+                    None => Utc::now().to_rfc3339(),
+                    Some(d) => d.as_utc_date_time().unwrap().to_rfc3339()
+                };
 
                 tweets.push(Tweet::new(&Database::to_string(item.get("from").unwrap()).unwrap(),
                                        &Database::to_string(item.get("content").unwrap()).unwrap(),
                                        &Database::to_string(item.get("_id").unwrap()).unwrap(),
                                        like,
-                                       kind))
+                                       kind,
+                                       &timestamp))
             }
         }
 
@@ -313,6 +327,154 @@ impl Database {
                     {
                         Err(_) => false,
                         Ok(_) => true
+                    }
+                }
+            }
+        }
+    }
+
+    pub fn add_dm(&self, from: &str, to: &str, content: &str) -> Option<String> {
+        let coll = self.client.db("rutweet").collection("dm");
+        let doc = doc!{
+            "from": from,
+            "to": to,
+            "content": content,
+            "timestamp": Utc::now(),
+        };
+
+        let res = match coll.insert_one(doc.clone(), None) {
+            Err(_) => Bson::Null,
+            Ok(r) => r.inserted_id.unwrap()
+        };
+
+        match res {
+            Bson::ObjectId(oid) => Some(oid.to_hex()),
+            _ => None
+        }
+    }
+
+    pub fn list_dm(&self, from: &str, to: &str) -> Vec<DM> {
+        let coll = self.client.db("rutweet").collection("dm");
+        let doc = doc!{
+            "from": from,
+            "to": to,
+        };
+
+        let mut dms = vec![];
+        let cursor = coll.find(Some(doc.clone()), None).unwrap();
+
+        /*
+         * We retrieve the DMs with the same Tweet structure since we're
+         * only using destination and content.
+         */
+        for result in cursor {
+            if let Ok(item) = result {
+                let timestamp = match item.get("timestamp") {
+                    None => Utc::now().to_rfc3339(),
+                    Some(d) => d.as_utc_date_time().unwrap().to_rfc3339()
+                };
+
+                dms.push(DM::new(from, to,
+                                 &Database::to_string(item.get("content").unwrap()).unwrap(),
+                                 &timestamp,
+                                 &Database::to_string(item.get("_id").unwrap()).unwrap()))
+            }
+        }
+
+        dms
+    }
+
+    pub fn block_user(&self, username: &str, blocked: &str) -> bool {
+        let coll = self.client.db("rutweet").collection("users");
+        let doc = doc!{
+            "name": username,
+        };
+
+        match coll.find_one(Some(doc.clone()), None) {
+            Err(_) => false,
+            Ok(d) => match d {
+                None => false,
+                Some(item) => {
+                    let mut b = match item.get("blocked") {
+                        None => vec![],
+                        Some(dbv) => dbv.as_array().unwrap().to_vec()
+                    };
+
+                    if !b.contains(&Bson::from(blocked)) {
+                        b.push(Bson::from(blocked));
+                    }
+
+                    match coll.update_one(doc,
+                                          doc!{"$set": {
+                                              "blocked": b.into_iter().map(Bson::from).collect::<Vec<_>>()
+                                          }},
+                                          None)
+                    {
+                        Err(_) => false,
+                        Ok(_) => true
+                    }
+                }
+            }
+        }
+    }
+
+    pub fn unblock_user(&self, username: &str, blocked: &str) -> bool {
+        let coll = self.client.db("rutweet").collection("users");
+        let doc = doc!{
+            "name": username,
+        };
+
+        match coll.find_one(Some(doc.clone()), None) {
+            Err(_) => false,
+            Ok(d) => match d {
+                None => false,
+                Some(item) => {
+                    let mut b = match item.get("blocked") {
+                        None => vec![],
+                        Some(dbv) => dbv.as_array().unwrap().to_vec()
+                    };
+
+                    if b.contains(&Bson::from(blocked)) {
+                        b.retain(|b| !b.as_str().unwrap().eq(blocked));
+                    }
+
+                    match coll.update_one(doc,
+                                          doc!{"$set": {
+                                              "blocked": b.into_iter().map(Bson::from).collect::<Vec<_>>()
+                                          }},
+                                          None)
+                    {
+                        Err(_) => false,
+                        Ok(_) => true
+                    }
+                }
+            }
+        }
+    }
+
+    pub fn get_blocking(&self, username: &str) -> Option<Vec<String>> {
+        let coll = self.client.db("rutweet").collection("users");
+        let doc = doc!{
+            "name": username,
+        };
+
+        match coll.find_one(Some(doc.clone()), None) {
+            Err(_) => None,
+            Ok(d) => match d {
+                None => None,
+                Some(item) => {
+                    match item.get("blocked") {
+                        None => None,
+                        Some(dbv) => {
+                            let v = dbv.as_array().unwrap().to_vec();
+                            let b = v.iter().fold(vec![],
+                                                  |mut acc, e| {
+                                                      acc.push(Database::to_string(e).unwrap());
+                                                      acc
+                                                  });
+
+                            Some(b)
+                        }
                     }
                 }
             }

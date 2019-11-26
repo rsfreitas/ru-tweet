@@ -32,19 +32,21 @@ pub fn handler(message: Json<Message>, session: State<RwLock<Session>>, db: Stat
     let mut id = String::new();
     let mut session = session.write().unwrap();
 
-    if message.name.is_empty() || !db.check_user_and_password(&message.name, &message.password) {
-        code = 1;
+    if message.name.is_empty() || message.password.is_empty() {
+        code = 1; // invalid fields
+    } else if !db.check_user_and_password(&message.name, &message.password) {
+        code = 2; // username and password don't match
     } else {
         /* If the user is already logged we return 0 and its ID */
         if session.is_logged(&message.name) {
             match session.get_id(&message.name) {
                 Some(sid) => id = sid,
-                None => code = 2
+                None => code = 3 // error retrieving user session ID
             };
         } else {
             match session.add(&message.name) {
                 Some(sid) => id = sid,
-                None => code = 3
+                None => code = 4 // error creating new session ID
             };
         }
     }

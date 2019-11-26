@@ -30,15 +30,15 @@ pub fn handler(message: Json<Message>, session: State<RwLock<Session>>, db: Stat
     let mut code = 0;
 
     if message.name.is_empty() || message.from.is_empty() {
-        code = 1;
+        code = 1; // invalid fields
     } else if !session.read().unwrap().is_id_from_user(&message.from, &message.name) {
-        code = 2;
+        code = 2; // the user is not logged at the moment
     } else {
         /* Deletes the user session */
         session.write().unwrap().delete(&message.from);
 
         if !db.delete_user(&message.name) {
-            code = 3;
+            code = 3; // database error
         }
     }
 

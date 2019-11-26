@@ -26,12 +26,11 @@ use crate::database::Database;
 pub fn handler(message: Json<Message>, db: State<Database>) -> Json<Answer> {
     let mut code = 0;
 
-    // Can't receive empty user to be added.
     if message.name.is_empty() || message.password.is_empty() {
-        code = 1;
+        code = 1; // invalid fields
     } else {
         match db.user_exists(&message.name) {
-            true => code = 2,
+            true => code = 2, // the user already exists
             false => db.add_user(&message.name, &message.password)
         };
     }

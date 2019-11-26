@@ -28,11 +28,9 @@ pub fn handler(message: Json<Message>, session: State<RwLock<Session>>) -> Json<
     let mut code = 0;
 
     if message.id.is_empty() {
-        code = 1;
-    }
-
-    if !session.write().unwrap().delete(&message.id) {
-        code = 2;
+        code = 1; // invalid fields
+    } else  if !session.write().unwrap().delete(&message.id) {
+        code = 2; // the user is not logged at the moment
     }
 
     Json(Answer::new(code))

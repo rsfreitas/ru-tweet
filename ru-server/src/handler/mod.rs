@@ -12,4 +12,9 @@ pub mod follow;
 pub mod unfollow;
 pub mod following;
 pub mod like;
+pub mod dm;
+pub mod list_dm;
+pub mod block;
+pub mod unblock;
+pub mod blocking;
 

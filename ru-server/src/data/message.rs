@@ -18,5 +18,11 @@ pub struct Message {
 
     #[serde(default)]
     pub follow: String,
+
+    #[serde(default)]
+    pub to: String,
+
+    #[serde(default)]
+    pub block: String,
 }
 
