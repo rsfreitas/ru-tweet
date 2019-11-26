@@ -67,23 +67,12 @@ impl Answer {
         }
     }
 
-    pub fn new_with_following(code: u32, following: Vec<String>) -> Answer {
+    pub fn new_info(id: &str, code: u32, following: Vec<String>, blocked: Vec<String>) -> Answer {
         Answer {
             code: code,
-            id: "".to_string(),
+            id: id.to_string(),
             tweets: Vec::new(),
             following: following,
-            blocked: Vec::new(),
-            dms: Vec::new(),
-        }
-    }
-
-    pub fn new_with_blocking(code: u32, blocked: Vec<String>) -> Answer {
-        Answer {
-            code: code,
-            id: "".to_string(),
-            tweets: Vec::new(),
-            following: Vec::new(),
             blocked: blocked,
             dms: Vec::new(),
         }

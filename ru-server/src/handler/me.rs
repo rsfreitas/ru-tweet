@@ -10,7 +10,7 @@ use crate::data::answer::Answer;
 use crate::database::Database;
 
 //
-// blocking handler.
+// me handler.
 //
 // Must receive:
 // {
@@ -23,11 +23,13 @@ use crate::database::Database;
 // {
 //  "code": int
 //  "following": array of strings
+//  "blocked": array of string
 // }
 //
 #[post("/", format = "application/json", data = "<message>")]
 pub fn handler(message: Json<Message>, session: State<RwLock<Session>>, db: State<Database>) -> Json<Answer> {
     let mut code = 0;
+    let mut following = vec![];
     let mut blocking = vec![];
 
     if message.from.is_empty() {
@@ -37,6 +39,11 @@ pub fn handler(message: Json<Message>, session: State<RwLock<Session>>, db: Stat
     } else {
         let name = session.read().unwrap().get_username(&message.from).unwrap();
 
+        following = match db.get_following(&name) {
+            None => vec![],
+            Some(f) => f
+        };
+
         blocking = match db.get_blocking(&name) {
             None => vec![],
             Some(f) => f
@@ -44,7 +51,7 @@ pub fn handler(message: Json<Message>, session: State<RwLock<Session>>, db: Stat
     }
 
     let answer = match code {
-        0 => Answer::new_with_blocking(code, blocking),
+        0 => Answer::new_info(&message.from, code, following, blocking),
         c @ _ => Answer::new(c)
     };
 

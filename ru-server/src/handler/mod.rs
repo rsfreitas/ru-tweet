@@ -10,11 +10,10 @@ pub mod list_tweet;
 pub mod get_tweet;
 pub mod follow;
 pub mod unfollow;
-pub mod following;
 pub mod like;
 pub mod dm;
 pub mod list_dm;
 pub mod block;
 pub mod unblock;
-pub mod blocking;
+pub mod me;
 
