@@ -38,8 +38,12 @@ pub fn handler(message: Json<Message>, session: State<RwLock<Session>>, db: Stat
     } else {
         let name = session.read().unwrap().get_username(&message.from).unwrap();
 
-        if !db.follow_user(&name, &message.follow) {
-            code = 4; // database error
+        if db.is_blocked(&name, &message.follow) {
+            code = 4; // don't follow someone who is already blocked
+        } else if db.is_blocked(&message.follow, &name) {
+            code = 5; // don't follow someone who blocked us
+        } else if !db.follow_user(&name, &message.follow) {
+            code = 6; // database error
         }
     }
 

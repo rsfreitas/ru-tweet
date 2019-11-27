@@ -7,14 +7,14 @@ use crate::data::user::User;
 // A container to hold information about connected/active users, keeping a
 // different ID value for each one of them.
 pub struct Session {
-    active_users: HashMap<String, User>
+    active_users: HashMap<String, User>,
 }
 
 impl Session {
     // Creates a Session container.
     pub fn create() -> Session {
         Session{
-            active_users: HashMap::new()
+            active_users: HashMap::new(),
         }
     }
 
@@ -52,6 +52,13 @@ impl Session {
         }
     }
 
+    pub fn get_token(&self, id: &str) -> Option<String> {
+        match self.active_users.get(id) {
+            None => None,
+            Some(u) => Some(u.token.to_string())
+        }
+    }
+
     pub fn is_logged(&self, username: &str) -> bool {
         for user in self.active_users.values() {
             if user.name.eq(username) {
@@ -71,6 +78,14 @@ impl Session {
             None => false,
             Some(u) => u.name.eq(username)
         }
+    }
+
+    pub fn set_user_token(&mut self, id: &str, username: &str, token: &str) {
+        /*
+         * Replaces current User with its token so we can send notifications
+         * when required to.
+         */
+        self.active_users.insert(id.to_string(), User::new_with_token(&username, token));
     }
 }
 

@@ -1,5 +1,6 @@
 
 use std::sync::RwLock;
+use std::thread;
 
 use rocket::State;
 use rocket_contrib::json::Json;
@@ -9,6 +10,7 @@ use crate::data::message::Message;
 use crate::data::answer::Answer;
 use crate::data::tweet::Kind;
 use crate::database::Database;
+use crate::notification::Notify;
 
 //
 // addTweet handler.
@@ -42,7 +44,27 @@ pub fn handler(message: Json<Message>, session: State<RwLock<Session>>, db: Stat
     } else {
         match db.add_tweet(&message.name, &message.content, Kind::Simple) {
             None => code = 4, // database insertion error
-            Some(tid) => id = tid
+            Some(tid) => {
+                // sends notification to followers
+                if let Some(followers) = db.get_followers(&message.name) {
+                    let tokens = followers.iter()
+                                          .fold(vec![],
+                                                |mut acc, e| {
+                                                    let i = session.read().unwrap().get_id(e).unwrap();
+                                                    acc.push(session.read().unwrap().get_token(&i).unwrap());
+                                                    acc
+                                                });
+
+                    thread::spawn(move || {
+                        tokens.iter().for_each(|t| {
+                            Notify::send(t, "new-tweet");
+                            ()
+                        });
+                    });
+                }
+
+                id = tid
+            }
         };
     }
 

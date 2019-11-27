@@ -20,3 +20,7 @@ version = "0.4.2"
 default-features = false
 features = ["json"]
 
+[dependencies.reqwest]
+version = "0.10.0-alpha.2"
+features = ["blocking"]
+

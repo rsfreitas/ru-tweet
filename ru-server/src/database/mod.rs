@@ -131,38 +131,36 @@ impl Database {
             "_id": ObjectId::with_string(id).unwrap(),
         };
 
-        match coll.find_one(Some(doc.clone()), None) {
-            Err(_) => None,
-            Ok(d) => match d {
-                None => None,
-                Some(item) => {
-                    let like = match item.get("like") {
-                        None => 0,
-                        Some(i) => i.as_i32().unwrap()
-                    };
+        if let Ok(d) = coll.find_one(Some(doc.clone()), None) {
+            if let Some(item) = d {
+                let like = match item.get("like") {
+                    None => 0,
+                    Some(i) => i.as_i32().unwrap()
+                };
 
-                    let kind = match item.get("kind") {
+                let kind = match item.get("kind") {
+                    None => Kind::Simple,
+                    Some(b) => match Kind::from_bson(b) {
                         None => Kind::Simple,
-                        Some(b) => match Kind::from_bson(b) {
-                            None => Kind::Simple,
-                            Some(k) => k
-                        }
-                    };
+                        Some(k) => k
+                    }
+                };
 
-                    let timestamp = match item.get("timestamp") {
-                        None => Utc::now().to_rfc3339(),
-                        Some(d) => d.as_utc_date_time().unwrap().to_rfc3339()
-                    };
+                let timestamp = match item.get("timestamp") {
+                    None => Utc::now().to_rfc3339(),
+                    Some(d) => d.as_utc_date_time().unwrap().to_rfc3339()
+                };
 
-                    Some(Tweet::new(&Database::to_string(item.get("from").unwrap()).unwrap(),
-                                    &Database::to_string(item.get("content").unwrap()).unwrap(),
-                                    &Database::to_string(item.get("_id").unwrap()).unwrap(),
-                                    like,
-                                    kind,
-                                    &timestamp))
-                }
+                return Some(Tweet::new(&Database::to_string(item.get("from").unwrap()).unwrap(),
+                                       &Database::to_string(item.get("content").unwrap()).unwrap(),
+                                       &Database::to_string(item.get("_id").unwrap()).unwrap(),
+                                       like,
+                                       kind,
+                                       &timestamp))
             }
         }
+
+        None
     }
 
     pub fn list_tweet(&self, from: &str) -> Vec<Tweet> {
@@ -206,101 +204,155 @@ impl Database {
         tweets
     }
 
-    pub fn follow_user(&self, username: &str, followed: &str) -> bool {
+    fn is_in_array(&self, key: &str, name: &str, array: &str) -> bool {
+        let coll = self.client.db("rutweet").collection("users");
+        let doc = doc!{
+            "name": key,
+        };
+
+        if let Ok(d) = coll.find_one(Some(doc.clone()), None) {
+            if let Some(item) = d {
+                let b = match item.get(array) {
+                    None => vec![],
+                    Some(dbv) => dbv.as_array().unwrap().to_vec()
+                };
+
+                return b.contains(&Bson::from(name))
+            }
+        }
+
+        false
+    }
+
+    fn add_into_string_array(&self, username: &str, name: &str, array: &str) -> bool {
         let coll = self.client.db("rutweet").collection("users");
         let doc = doc!{
             "name": username,
         };
 
-        match coll.find_one(Some(doc.clone()), None) {
-            Err(_) => false,
-            Ok(d) => match d {
-                None => false,
-                Some(item) => {
-                    let mut f = match item.get("following") {
-                        None => vec![],
-                        Some(dbv) => dbv.as_array().unwrap().to_vec()
-                    };
+        if let Ok(d) = coll.find_one(Some(doc.clone()), None) {
+            if let Some(item) = d {
+                let mut a = match item.get(array) {
+                    None => vec![],
+                    Some(dbv) => dbv.as_array().unwrap().to_vec()
+                };
 
-                    if !f.contains(&Bson::from(followed)) {
-                        f.push(Bson::from(followed));
-                    }
+                if !a.contains(&Bson::from(name)) {
+                    a.push(Bson::from(name));
+                }
 
-                    match coll.update_one(doc,
-                                          doc!{"$set": {
-                                              "following": f.into_iter().map(Bson::from).collect::<Vec<_>>()
-                                          }},
-                                          None)
-                    {
-                        Err(_) => false,
-                        Ok(_) => true
-                    }
+                if let Ok(_) = coll.update_one(doc,
+                                               doc!{"$set": {
+                                                   array: a.into_iter()
+                                                           .map(Bson::from)
+                                                           .collect::<Vec<_>>()
+                                               }}, None)
+                {
+                    return true
                 }
             }
         }
+
+        false
+    }
+
+    fn delete_from_string_array(&self, username: &str, name: &str, array: &str) -> bool {
+        let coll = self.client.db("rutweet").collection("users");
+        let doc = doc!{
+            "name": username,
+        };
+
+        if let Ok(d) = coll.find_one(Some(doc.clone()), None) {
+            if let Some(item) = d {
+                let mut f = match item.get(array) {
+                    None => vec![],
+                    Some(dbv) => dbv.as_array().unwrap().to_vec()
+                };
+
+                if f.contains(&Bson::from(name)) {
+                    f.retain(|b| !b.as_str().unwrap().eq(name));
+                }
+
+                if let Ok(_) = coll.update_one(doc,
+                                               doc!{"$set": {
+                                                   array: f.into_iter()
+                                                           .map(Bson::from)
+                                                           .collect::<Vec<_>>()
+                                               }}, None)
+                {
+                    return true
+                }
+            }
+        }
+
+        false
+    }
+
+    fn get_string_array(&self, key: &str, array: &str) -> Option<Vec<String>> {
+        let coll = self.client.db("rutweet").collection("users");
+        let doc = doc!{
+            "name": key,
+        };
+
+        if let Ok(d) = coll.find_one(Some(doc.clone()), None) {
+            if let Some(item) = d {
+                if let Some(dbv) = item.get(array) {
+                    let v = dbv.as_array().unwrap().to_vec();
+                    let f = v.iter().fold(vec![],
+                                          |mut acc, e| {
+                                              acc.push(Database::to_string(e).unwrap());
+                                              acc
+                                          });
+
+                    return Some(f)
+                }
+            }
+        }
+
+        None
+    }
+
+    pub fn follow_user(&self, username: &str, followed: &str) -> bool {
+        let added = self.add_into_string_array(username, followed, "following");
+
+        if added {
+            self.add_into_string_array(followed, username, "followers");
+        }
+
+        added
     }
 
     pub fn unfollow_user(&self, username: &str, followed: &str) -> bool {
-        let coll = self.client.db("rutweet").collection("users");
-        let doc = doc!{
-            "name": username,
-        };
+        let deleted = self.delete_from_string_array(username, followed, "following");
 
-        match coll.find_one(Some(doc.clone()), None) {
-            Err(_) => false,
-            Ok(d) => match d {
-                None => false,
-                Some(item) => {
-                    let mut f = match item.get("following") {
-                        None => vec![],
-                        Some(dbv) => dbv.as_array().unwrap().to_vec()
-                    };
-
-                    if f.contains(&Bson::from(followed)) {
-                        f.retain(|b| !b.as_str().unwrap().eq(followed));
-                    }
-
-                    match coll.update_one(doc,
-                                          doc!{"$set": {
-                                              "following": f.into_iter().map(Bson::from).collect::<Vec<_>>()
-                                          }},
-                                          None)
-                    {
-                        Err(_) => false,
-                        Ok(_) => true
-                    }
-                }
-            }
+        if deleted {
+            self.delete_from_string_array(followed, username, "followers");
         }
+
+        deleted
     }
 
     pub fn get_following(&self, username: &str) -> Option<Vec<String>> {
-        let coll = self.client.db("rutweet").collection("users");
+        self.get_string_array(username, "following")
+    }
+
+    pub fn get_followers(&self, username: &str) -> Option<Vec<String>> {
+        self.get_string_array(username, "followers")
+    }
+
+    pub fn get_username_from_message(&self, id: &str) -> Option<String> {
+        let coll = self.client.db("rutweet").collection("tweet");
         let doc = doc!{
-            "name": username,
+            "_id": ObjectId::with_string(id).unwrap(),
         };
 
-        match coll.find_one(Some(doc.clone()), None) {
-            Err(_) => None,
-            Ok(d) => match d {
-                None => None,
-                Some(item) => {
-                    match item.get("following") {
-                        None => None,
-                        Some(dbv) => {
-                            let v = dbv.as_array().unwrap().to_vec();
-                            let f = v.iter().fold(vec![],
-                                                  |mut acc, e| {
-                                                      acc.push(Database::to_string(e).unwrap());
-                                                      acc
-                                                  });
-
-                            Some(f)
-                        }
-                    }
-                }
+        if let Ok(d) = coll.find_one(Some(doc.clone()), None) {
+            if let Some(item) = d {
+                return Some(Database::to_string(item.get("from").unwrap()).unwrap());
             }
         }
+
+        None
     }
 
     pub fn increment_tweet_like(&self, id: &str) -> bool {
@@ -384,101 +436,24 @@ impl Database {
         dms
     }
 
+    pub fn is_following(&self, username: &str, following: &str) -> bool {
+        self.is_in_array(username, following, "following")
+    }
+
+    pub fn is_blocked(&self, username: &str, blocked: &str) -> bool {
+        self.is_in_array(username, blocked, "blocked")
+    }
+
     pub fn block_user(&self, username: &str, blocked: &str) -> bool {
-        let coll = self.client.db("rutweet").collection("users");
-        let doc = doc!{
-            "name": username,
-        };
-
-        match coll.find_one(Some(doc.clone()), None) {
-            Err(_) => false,
-            Ok(d) => match d {
-                None => false,
-                Some(item) => {
-                    let mut b = match item.get("blocked") {
-                        None => vec![],
-                        Some(dbv) => dbv.as_array().unwrap().to_vec()
-                    };
-
-                    if !b.contains(&Bson::from(blocked)) {
-                        b.push(Bson::from(blocked));
-                    }
-
-                    match coll.update_one(doc,
-                                          doc!{"$set": {
-                                              "blocked": b.into_iter().map(Bson::from).collect::<Vec<_>>()
-                                          }},
-                                          None)
-                    {
-                        Err(_) => false,
-                        Ok(_) => true
-                    }
-                }
-            }
-        }
+        self.add_into_string_array(username, blocked, "blocked")
     }
 
     pub fn unblock_user(&self, username: &str, blocked: &str) -> bool {
-        let coll = self.client.db("rutweet").collection("users");
-        let doc = doc!{
-            "name": username,
-        };
-
-        match coll.find_one(Some(doc.clone()), None) {
-            Err(_) => false,
-            Ok(d) => match d {
-                None => false,
-                Some(item) => {
-                    let mut b = match item.get("blocked") {
-                        None => vec![],
-                        Some(dbv) => dbv.as_array().unwrap().to_vec()
-                    };
-
-                    if b.contains(&Bson::from(blocked)) {
-                        b.retain(|b| !b.as_str().unwrap().eq(blocked));
-                    }
-
-                    match coll.update_one(doc,
-                                          doc!{"$set": {
-                                              "blocked": b.into_iter().map(Bson::from).collect::<Vec<_>>()
-                                          }},
-                                          None)
-                    {
-                        Err(_) => false,
-                        Ok(_) => true
-                    }
-                }
-            }
-        }
+        self.delete_from_string_array(username, blocked, "blocked")
     }
 
     pub fn get_blocking(&self, username: &str) -> Option<Vec<String>> {
-        let coll = self.client.db("rutweet").collection("users");
-        let doc = doc!{
-            "name": username,
-        };
-
-        match coll.find_one(Some(doc.clone()), None) {
-            Err(_) => None,
-            Ok(d) => match d {
-                None => None,
-                Some(item) => {
-                    match item.get("blocked") {
-                        None => None,
-                        Some(dbv) => {
-                            let v = dbv.as_array().unwrap().to_vec();
-                            let b = v.iter().fold(vec![],
-                                                  |mut acc, e| {
-                                                      acc.push(Database::to_string(e).unwrap());
-                                                      acc
-                                                  });
-
-                            Some(b)
-                        }
-                    }
-                }
-            }
-        }
+        self.get_string_array(username, "blocked")
     }
 }
 

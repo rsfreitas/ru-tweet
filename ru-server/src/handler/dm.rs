@@ -8,6 +8,7 @@ use crate::data::session::Session;
 use crate::data::message::Message;
 use crate::data::answer::Answer;
 use crate::database::Database;
+use crate::notification::Notify;
 
 //
 // dm handler.
@@ -51,7 +52,17 @@ pub fn handler(message: Json<Message>, session: State<RwLock<Session>>, db: Stat
         if code == 0 {
             match db.add_dm(&message.from, &message.to, &message.content) {
                 None => code = 5, // database insertion error
-                Some(tid) => id = tid
+                Some(tid) => {
+                    let s = session.read().unwrap();
+
+                    if let Some(i) = s.get_id(&message.to) {
+                        if let Some(token) = s.get_token(&i) {
+                            Notify::send(&token, "dm");
+                        }
+                    }
+
+                    id = tid
+                }
             };
         }
     }

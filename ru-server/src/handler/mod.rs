@@ -16,4 +16,5 @@ pub mod list_dm;
 pub mod block;
 pub mod unblock;
 pub mod me;
+pub mod token;
 

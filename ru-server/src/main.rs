@@ -6,12 +6,14 @@ extern crate rocket_contrib;
 #[macro_use(bson, doc)] extern crate mongodb;
 extern crate uuid;
 extern crate chrono;
+extern crate reqwest;
 
 use std::sync::RwLock;
 
 mod data;
 mod handler;
 mod database;
+mod notification;
 
 use data::session::Session;
 use database::Database;
@@ -41,6 +43,7 @@ fn main() {
                     .mount("/block", routes![handler::block::handler])
                     .mount("/unblock", routes![handler::unblock::handler])
                     .mount("/me", routes![handler::me::handler])
+                    .mount("/token", routes![handler::token::handler])
                     .manage(RwLock::new(s))
                     .manage(db)
                     .launch();

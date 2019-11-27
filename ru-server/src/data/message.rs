@@ -24,5 +24,8 @@ pub struct Message {
 
     #[serde(default)]
     pub block: String,
+
+    #[serde(default)]
+    pub token: String,
 }
 
