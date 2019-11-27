@@ -40,8 +40,10 @@ pub fn handler(message: Json<Message>, session: State<RwLock<Session>>, db: Stat
         } else {
             if let Some(username) = db.get_username_from_message(&message.id) {
                 let id = session.read().unwrap().get_id(&username).unwrap();
-                let token = session.read().unwrap().get_token(&id).unwrap();
-                Notify::send(&token, "like");
+
+                if let Some(token) = session.read().unwrap().get_token(&id) {
+                    Notify::send(&token, "like");
+                }
             }
         }
     }

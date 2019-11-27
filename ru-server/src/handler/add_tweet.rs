@@ -51,7 +51,11 @@ pub fn handler(message: Json<Message>, session: State<RwLock<Session>>, db: Stat
                                           .fold(vec![],
                                                 |mut acc, e| {
                                                     let i = session.read().unwrap().get_id(e).unwrap();
-                                                    acc.push(session.read().unwrap().get_token(&i).unwrap());
+
+                                                    if let Some(token) = session.read().unwrap().get_token(&i) {
+                                                        acc.push(token)
+                                                    }
+
                                                     acc
                                                 });
 
