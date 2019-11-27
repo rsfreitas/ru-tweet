@@ -31,7 +31,7 @@ With the nightly rust compiler installed run the command to build the
 application:
 ```
 cargo build
-``
+```
 
 ## Running the application
 
