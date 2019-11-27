@@ -50,10 +50,10 @@ pub fn handler(message: Json<Message>, session: State<RwLock<Session>>, db: Stat
                     let tokens = followers.iter()
                                           .fold(vec![],
                                                 |mut acc, e| {
-                                                    let i = session.read().unwrap().get_id(e).unwrap();
+                                                    let s = session.read().unwrap();
 
-                                                    if let Some(token) = session.read().unwrap().get_token(&i) {
-                                                        acc.push(token)
+                                                    if let Some(i) = s.get_id(e) {
+                                                        acc.push(s.get_token(&i));
                                                     }
 
                                                     acc
@@ -61,7 +61,10 @@ pub fn handler(message: Json<Message>, session: State<RwLock<Session>>, db: Stat
 
                     thread::spawn(move || {
                         tokens.iter().for_each(|t| {
-                            Notify::send(t, "new-tweet");
+                            match t {
+                                Some(token) => Notify::send(token, "new-tweet"),
+                                None => false
+                            };
                             ()
                         });
                     });
