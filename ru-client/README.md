@@ -39,7 +39,7 @@ These tweets can be created by clicking the message icon locate at the bottom
 right corner of the application.
 
 <p align="center" >
-<img src="https://raw.githubusercontent.com/rsfreitas/ru-tweet/master/ru-client/images/new_tweet_button.png" width="128" height="550" />
+<img src="https://raw.githubusercontent.com/rsfreitas/ru-tweet/master/ru-client/images/new_tweet_button.png" width="128" height="150" />
 </p>
 
 When clicked this options will open a dialog letting the user enter a new tweet
