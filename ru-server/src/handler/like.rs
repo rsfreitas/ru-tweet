@@ -35,14 +35,22 @@ pub fn handler(message: Json<Message>, session: State<RwLock<Session>>, db: Stat
     } else if !session.read().unwrap().is_logged_with_id(&message.from) {
         code = 2; // the user is not logged at the moment
     } else {
-        if !db.increment_tweet_like(&message.id) {
-            code = 3; // database error
-        } else {
-            if let Some(username) = db.get_username_from_message(&message.id) {
-                let id = session.read().unwrap().get_id(&username).unwrap();
+        let s = session.read().unwrap();
+        let session_user = s.get_username(&message.from).unwrap();
 
-                if let Some(token) = session.read().unwrap().get_token(&id) {
-                    Notify::send(&token, "like");
+        match db.get_username_from_message(&message.id) {
+            None => code = 3, // original author not found
+            Some(username) => {
+                if session_user.eq(&username) {
+                    code = 4; // the original author is trying to like his message
+                } else if !db.increment_tweet_like(&message.id) {
+                    code = 5; // database error
+                } else {
+                    let id = s.get_id(&username).unwrap();
+
+                    if let Some(token) = s.get_token(&id) {
+                        Notify::send(&token, "like");
+                    }
                 }
             }
         }

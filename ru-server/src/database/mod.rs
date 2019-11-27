@@ -102,16 +102,22 @@ impl Database {
 
     pub fn delete_tweet(&self, from: &str, id: &str) -> bool {
         let coll = self.client.db("rutweet").collection("tweet");
-        let doc = doc!{
-            "from": from,
-            "_id": ObjectId::with_string(id).unwrap(),
-        };
 
-        match coll.delete_one(doc.clone(), None) {
+        match ObjectId::with_string(id) {
             Err(_) => false,
-            Ok(r) => match r.deleted_count {
-                0 => false,
-                _ => true
+            Ok(oid) => {
+                let doc = doc!{
+                    "from": from,
+                    "_id": oid,
+                };
+
+                match coll.delete_one(doc.clone(), None) {
+                    Err(_) => false,
+                    Ok(r) => match r.deleted_count {
+                        0 => false,
+                        _ => true
+                    }
+                }
             }
         }
     }
@@ -126,37 +132,40 @@ impl Database {
 
     pub fn get_tweet(&self, from: &str, id: &str) -> Option<Tweet> {
         let coll = self.client.db("rutweet").collection("tweet");
-        let doc = doc!{
-            "from": from,
-            "_id": ObjectId::with_string(id).unwrap(),
-        };
 
-        if let Ok(d) = coll.find_one(Some(doc.clone()), None) {
-            if let Some(item) = d {
-                let like = match item.get("like") {
-                    None => 0,
-                    Some(i) => i.as_i32().unwrap()
-                };
+        if let Ok(id) = ObjectId::with_string(id) {
+            let doc = doc!{
+                "from": from,
+                "_id": id,
+            };
 
-                let kind = match item.get("kind") {
-                    None => Kind::Simple,
-                    Some(b) => match Kind::from_bson(b) {
+            if let Ok(d) = coll.find_one(Some(doc.clone()), None) {
+                if let Some(item) = d {
+                    let like = match item.get("like") {
+                        None => 0,
+                        Some(i) => i.as_i32().unwrap()
+                    };
+
+                    let kind = match item.get("kind") {
                         None => Kind::Simple,
-                        Some(k) => k
-                    }
-                };
+                        Some(b) => match Kind::from_bson(b) {
+                            None => Kind::Simple,
+                            Some(k) => k
+                        }
+                    };
 
-                let timestamp = match item.get("timestamp") {
-                    None => Utc::now().to_rfc3339(),
-                    Some(d) => d.as_utc_date_time().unwrap().to_rfc3339()
-                };
+                    let timestamp = match item.get("timestamp") {
+                        None => Utc::now().to_rfc3339(),
+                        Some(d) => d.as_utc_date_time().unwrap().to_rfc3339()
+                    };
 
-                return Some(Tweet::new(&Database::to_string(item.get("from").unwrap()).unwrap(),
-                                       &Database::to_string(item.get("content").unwrap()).unwrap(),
-                                       &Database::to_string(item.get("_id").unwrap()).unwrap(),
-                                       like,
-                                       kind,
-                                       &timestamp))
+                    return Some(Tweet::new(&Database::to_string(item.get("from").unwrap()).unwrap(),
+                                           &Database::to_string(item.get("content").unwrap()).unwrap(),
+                                           &Database::to_string(item.get("_id").unwrap()).unwrap(),
+                                           like,
+                                           kind,
+                                           &timestamp))
+                }
             }
         }
 
@@ -342,43 +351,55 @@ impl Database {
 
     pub fn get_username_from_message(&self, id: &str) -> Option<String> {
         let coll = self.client.db("rutweet").collection("tweet");
-        let doc = doc!{
-            "_id": ObjectId::with_string(id).unwrap(),
-        };
 
-        if let Ok(d) = coll.find_one(Some(doc.clone()), None) {
-            if let Some(item) = d {
-                return Some(Database::to_string(item.get("from").unwrap()).unwrap());
+        match ObjectId::with_string(id) {
+            Err(_) => (),
+            Ok(id) => {
+                let doc = doc!{
+                    "_id": id,
+                };
+
+                if let Ok(d) = coll.find_one(Some(doc.clone()), None) {
+                    if let Some(item) = d {
+                        return Some(Database::to_string(item.get("from").unwrap()).unwrap());
+                    }
+                }
             }
-        }
+        };
 
         None
     }
 
     pub fn increment_tweet_like(&self, id: &str) -> bool {
         let coll = self.client.db("rutweet").collection("tweet");
-        let doc = doc!{
-            "_id": ObjectId::with_string(id).unwrap(),
-        };
 
-        match coll.find_one(Some(doc.clone()), None) {
+        match ObjectId::with_string(id) {
             Err(_) => false,
-            Ok(d) => match d {
-                None => false,
-                Some(item) => {
-                    let like = match item.get("like") {
-                        None => 1,
-                        Some(l) => l.as_i32().unwrap() + 1
-                    };
+            Ok(id) => {
+                let doc = doc!{
+                    "_id": id,
+                };
 
-                    match coll.update_one(doc,
-                                          doc!{"$set": {
-                                              "like": like
-                                          }},
-                                          None)
-                    {
-                        Err(_) => false,
-                        Ok(_) => true
+                match coll.find_one(Some(doc.clone()), None) {
+                    Err(_) => false,
+                    Ok(d) => match d {
+                        None => false,
+                        Some(item) => {
+                            let like = match item.get("like") {
+                                None => 1,
+                                Some(l) => l.as_i32().unwrap() + 1
+                            };
+
+                            match coll.update_one(doc,
+                                                  doc!{"$set": {
+                                                      "like": like
+                                                  }},
+                                                  None)
+                            {
+                                Err(_) => false,
+                                Ok(_) => true
+                            }
+                        }
                     }
                 }
             }
