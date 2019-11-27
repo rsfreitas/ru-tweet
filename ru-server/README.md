@@ -29,9 +29,9 @@ must be used.
 
 With the nightly rust compiler installed run the command to build the
 application:
-{{{
+```
 cargo build
-}}}
+``
 
 ## Running the application
 
@@ -39,9 +39,9 @@ Before executing the server a mongodb server must be executed and available
 for it. So the first step is to put a mongodb database server in execution.
 
 The code block inside the file _main.rs_ defines its host and port:
-{{{
+```rust
     let db = Database::create("localhost", 27017).unwrap();
-}}}
+```
 
 ## Using notifications
 
@@ -51,9 +51,9 @@ to send notifications when required to.
 In order to use this feature you must have a firebase account with the cloud
 messaging enabled. This will provide an *Authorization* key which must be
 updated in the source code, inside the file _notification/mod.rs_
-{{{
+```rust
 const KEY: &'static str = "put-yout-FCM-key-here";
-}}}
+```
 replacing the constant value with it.
 
 Without a valid key all notification request will receive a 403 from the
