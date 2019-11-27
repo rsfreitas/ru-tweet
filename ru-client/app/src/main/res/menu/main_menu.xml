@@ -6,4 +6,9 @@
         app:showAsAction="never"
         android:title="Follow">
     </item>
+    <item
+        android:id="@+id/action_block"
+        app:showAsAction="never"
+        android:title="Block">
+    </item>
 </menu>

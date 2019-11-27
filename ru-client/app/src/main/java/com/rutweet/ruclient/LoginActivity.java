@@ -11,7 +11,6 @@ import androidx.appcompat.app.AppCompatActivity;
 
 import com.rutweet.ruclient.common.Credentials;
 import com.rutweet.ruclient.ipc.Login;
-import com.rutweet.ruclient.net.CallServer;
 
 public class LoginActivity extends AppCompatActivity {
     EditText username,password;
@@ -26,9 +25,6 @@ public class LoginActivity extends AppCompatActivity {
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-
-        // 10.0.2.2 is the (default) host IP if we're running inside an emulator
-        CallServer.setHostname("10.0.2.2", 8000);
 
         if (Login.isUserLogged(getFilesDir().getAbsolutePath())) {
             callMainActivity();

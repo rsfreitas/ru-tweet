@@ -1,12 +1,14 @@
 package com.rutweet.ruclient.ipc;
 
+import java.util.Date;
 import java.util.HashMap;
 
 import com.google.gson.annotations.SerializedName;
 
+import com.rutweet.ruclient.common.DateUtil;
 import com.rutweet.ruclient.net.CallServer;
 
-public class Tweet {
+public class Tweet implements Comparable<Tweet> {
     @SerializedName("from")
     String from;
 
@@ -66,8 +68,13 @@ public class Tweet {
         Answer answer = CallServer.call("like", args);
     }
 
-    public String Timestamp() {
-        return timestamp;
+    public Date Timestamp() {
+        try {
+            return DateUtil.parseRFC3339(timestamp);
+        } catch (Exception ignored) {
+        }
+
+        return null;
     }
 
     public String Id() {
@@ -84,5 +91,13 @@ public class Tweet {
 
     public int Like() {
         return like;
+    }
+
+    @Override
+    public int compareTo(Tweet tweet) {
+        if ((Timestamp() == null) || (tweet.Timestamp() == null))
+            return 0;
+
+        return Timestamp().compareTo(tweet.Timestamp());
     }
 }

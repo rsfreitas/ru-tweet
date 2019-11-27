@@ -19,7 +19,7 @@ import com.rutweet.ruclient.common.Credentials;
 public class SectionsPagerAdapter extends FragmentPagerAdapter {
 
     @StringRes
-    private static final int[] TAB_TITLES = new int[]{R.string.tab_text_2, R.string.tab_text_1, R.string.tab_text_3};
+    private static final int[] TAB_TITLES = new int[]{R.string.tab_text_2, R.string.tab_text_1, R.string.tab_text_3, R.string.tab_text_4};
     private final Context mContext;
     private Credentials credentials;
 
@@ -43,13 +43,16 @@ public class SectionsPagerAdapter extends FragmentPagerAdapter {
             fragment = new PersonalFragment();
             break;
 
-        case 1:
-            System.out.println("Creating");
+        case 1: ;
             fragment = new TimelineFragment();
             break;
 
         case 2:
             fragment = new FollowingFragment();
+            break;
+
+        case 3:
+            fragment = new BlockedFragment();
             break;
         }
 
@@ -67,6 +70,6 @@ public class SectionsPagerAdapter extends FragmentPagerAdapter {
 
     @Override
     public int getCount() {
-        return 3;
+        return 4;
     }
 }

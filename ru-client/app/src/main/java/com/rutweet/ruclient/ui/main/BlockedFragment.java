@@ -2,7 +2,6 @@ package com.rutweet.ruclient.ui.main;
 
 import java.util.List;
 
-import android.content.Intent;
 import android.os.Bundle;
 import android.view.LayoutInflater;
 import android.view.MenuItem;
@@ -16,29 +15,45 @@ import android.widget.PopupMenu;
 import androidx.fragment.app.Fragment;
 
 import com.rutweet.ruclient.MainActivity;
-import com.rutweet.ruclient.MessageListActivity;
 import com.rutweet.ruclient.R;
 import com.rutweet.ruclient.common.Credentials;
 import com.rutweet.ruclient.ipc.User;
 
-public class FollowingFragment extends Fragment {
+public class BlockedFragment extends Fragment {
     private Credentials credentials;
     private boolean viewCreated = false;
+
+    private void populateListView(ListView listView) {
+        List<String> dataList = User.ListBlocked(credentials.Id());
+
+        if (dataList != null) {
+            ArrayAdapter<String> arrayAdapter = new ArrayAdapter<String>(
+                    getActivity(), android.R.layout.simple_list_item_1, dataList
+            );
+
+            listView.setAdapter(arrayAdapter);
+        }
+    }
+
+    @Override
+    public void onDestroyView() {
+        super.onDestroyView();
+        viewCreated = false;
+    }
 
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
         viewCreated = true;
         credentials = (Credentials)getArguments().getSerializable("credentials");
-        return inflater.inflate(R.layout.following_fragment, container, false);
+        return inflater.inflate(R.layout.blocked_fragment, container, false);
     }
 
     @Override
     public void onActivityCreated(Bundle savedInstanceState) {
         super.onActivityCreated(savedInstanceState);
 
-        final ViewGroup viewGroup = (ViewGroup)getView();
-        final ListView listView = (ListView)viewGroup.findViewById(R.id.following_listview);
-
+        final ViewGroup viewGroup = (ViewGroup) getView();
+        final ListView listView = (ListView) viewGroup.findViewById(R.id.blocked_listview);
         listView.setClickable(true);
         listView.setOnItemClickListener(new AdapterView.OnItemClickListener() {
             @Override
@@ -57,34 +72,20 @@ public class FollowingFragment extends Fragment {
     }
 
     @Override
-    public void onDestroyView() {
-        super.onDestroyView();
-        viewCreated = false;
-    }
-
-    @Override
     public void setMenuVisibility(final boolean visible) {
         super.setMenuVisibility(visible);
 
         if (visible && viewCreated) {
             final ViewGroup viewGroup = (ViewGroup)getView();
-            final ListView listView = (ListView)viewGroup.findViewById(R.id.following_listview);
+            final ListView listView = (ListView)viewGroup.findViewById(R.id.blocked_listview);
 
             populateListView(listView);
-            MainActivity.setActiveFragment(com.rutweet.ruclient.common.Fragment.Following);
+            MainActivity.setActiveFragment(com.rutweet.ruclient.common.Fragment.Blocked);
         }
     }
 
-    private void populateListView(ListView listView) {
-        List<String> dataList = User.ListFollowing(credentials.Id());
-
-        if (dataList != null) {
-            ArrayAdapter<String> arrayAdapter = new ArrayAdapter<String>(
-                    getActivity(), android.R.layout.simple_list_item_1, dataList
-            );
-
-            listView.setAdapter(arrayAdapter);
-        }
+    private void unblockUser(String user) {
+        User.Unblock(credentials.Id(), user);
     }
 
     private void showMenu(View view, final String user, final ListView listView) {
@@ -95,15 +96,8 @@ public class FollowingFragment extends Fragment {
                 int id = item.getItemId();
 
                 switch (id) {
-                case R.id.following_item_dm:
-                    Intent intent = new Intent(getActivity(), MessageListActivity.class);
-                    intent.putExtra("credentials", credentials);
-                    intent.putExtra("to", user);
-                    startActivity(intent);
-                    break;
-
-                case R.id.following_item_unfollow:
-                    unfollowUser(user);
+                case R.id.blocked_item_unblock:
+                    unblockUser(user);
                     populateListView(listView);
                     break;
                 }
@@ -112,11 +106,7 @@ public class FollowingFragment extends Fragment {
             }
         });
 
-        menu.inflate(R.menu.following_item_menu);
+        menu.inflate(R.menu.blocked_item_menu);
         menu.show();
-    }
-
-    private void unfollowUser(String user) {
-        User.Unfollow(credentials.Id(), user);
     }
 }

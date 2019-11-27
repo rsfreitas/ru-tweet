@@ -9,18 +9,9 @@ import android.os.AsyncTask;
 import com.rutweet.ruclient.ipc.Answer;
 
 public class CallServer {
-    private static String host;
-    private static int port;
-
-    /*
-     * Method responsible for initialize the server settings, host and port. It
-     * must be called at least one time in order to make requests against the
-     * server later.
-     */
-    public static void setHostname(String host, int port) {
-        CallServer.host = host;
-        CallServer.port = port;
-    }
+    // 10.0.2.2 is the (default) host IP if we're running inside an emulator
+    private final static String host = "10.0.2.2";
+    private final static int port = 8000;
 
     public static Answer call(String method, HashMap<String, String> data) {
         final Answer answer = new Answer();

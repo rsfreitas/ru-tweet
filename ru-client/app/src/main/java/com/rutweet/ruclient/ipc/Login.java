@@ -63,4 +63,19 @@ public class Login {
 
         return rc;
     }
+
+    public static int token(String from, String token) {
+        int rc = -1;
+
+        HashMap<String, String> args = new HashMap<>();
+        args.put("from", from);
+        args.put("token", token);
+
+        Answer answer = CallServer.call("token", args);
+
+        if (answer != null)
+            rc = answer.Code();
+
+        return rc;
+    }
 }

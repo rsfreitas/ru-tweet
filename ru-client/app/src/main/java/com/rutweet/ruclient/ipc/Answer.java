@@ -42,6 +42,20 @@ public class Answer {
         return data.following;
     }
 
+    public String[] Blocked() {
+        if (empty)
+            return null;
+
+        return data.blocked;
+    }
+
+    public DirectMessage[] DirectMessages() {
+        if (empty)
+            return null;
+
+        return data.dms;
+    }
+
     private class AnswerData {
         @SerializedName("id")
         String id;
@@ -54,5 +68,11 @@ public class Answer {
 
         @SerializedName("following")
         String[] following;
+
+        @SerializedName("blocked")
+        String[] blocked;
+
+        @SerializedName("dms")
+        DirectMessage[] dms;
     }
 }

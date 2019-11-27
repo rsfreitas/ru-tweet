@@ -1,7 +1,9 @@
 package com.rutweet.ruclient.ui.main;
 
+import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Locale;
@@ -19,6 +21,7 @@ import android.widget.SimpleAdapter;
 
 import androidx.fragment.app.Fragment;
 
+import com.rutweet.ruclient.MainActivity;
 import com.rutweet.ruclient.R;
 import com.rutweet.ruclient.common.Credentials;
 import com.rutweet.ruclient.ipc.Tweet;
@@ -26,9 +29,9 @@ import com.rutweet.ruclient.ipc.User;
 
 public class TimelineFragment extends Fragment {
     private Credentials credentials;
+    private boolean viewCreated = false;
 
     private void populateListView(ListView listView) {
-        // get list of following
         List<String> following = User.ListFollowing(credentials.Id());
 
         if (following == null)
@@ -36,7 +39,6 @@ public class TimelineFragment extends Fragment {
 
         List<Tweet> tweets = new ArrayList<>();
 
-        // get tweets of each one of them
         for (String f : following) {
             Tweet[] t = Tweet.ListTweets(credentials.Username(), f);
 
@@ -47,16 +49,17 @@ public class TimelineFragment extends Fragment {
         if (tweets.size() == 0)
             return;
 
-        // sort tweets by timestamp
-
-        // show their tweets
+        Collections.sort(tweets);
         List<Map<String, String>> itemDataList = new ArrayList<>();
 
         for (Tweet t : tweets) {
+            SimpleDateFormat fmt = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
+            String timestamp = fmt.format(t.Timestamp());
+
             HashMap<String, String> item = new HashMap<>();
             item.put("timestamp",
-                    String.format(Locale.getDefault(), "From: %s Timestamp: %s Like: %d",
-                            t.From(), t.Timestamp(), t.Like()));
+                     String.format(Locale.getDefault(), "%s - %s Likes:%d",
+                                   timestamp, t.From(), t.Like()));
 
             item.put("content", t.Content());
             item.put("author", t.From());
@@ -85,24 +88,35 @@ public class TimelineFragment extends Fragment {
     public void setMenuVisibility(final boolean visible) {
         super.setMenuVisibility(visible);
 
-        if (visible) {
+        if (visible && viewCreated) {
             final ViewGroup viewGroup = (ViewGroup)getView();
             final ListView listView = (ListView)viewGroup.findViewById(R.id.timeline_listview);
+
             populateListView(listView);
+            MainActivity.setActiveFragment(com.rutweet.ruclient.common.Fragment.Timeline);
         }
     }
 
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
+        viewCreated = true;
         credentials = (Credentials)getArguments().getSerializable("credentials");
         return inflater.inflate(R.layout.timeline_fragment, container, false);
     }
 
     @Override
+    public void onDestroyView() {
+        super.onDestroyView();
+        viewCreated = false;
+    }
+
+    @Override
     public void onActivityCreated(Bundle savedInstanceState) {
         super.onActivityCreated(savedInstanceState);
+
         final ViewGroup viewGroup = (ViewGroup)getView();
         final ListView listView = (ListView)viewGroup.findViewById(R.id.timeline_listview);
+
         listView.setClickable(true);
         listView.setOnItemClickListener(new AdapterView.OnItemClickListener() {
             @Override
@@ -125,17 +139,16 @@ public class TimelineFragment extends Fragment {
                 int id = item.getItemId();
 
                 switch (id) {
-                case R.id.timeline_item_block:
-                    break;
-
                 case R.id.timeline_item_like:
                     Tweet.LikeTweet(credentials.Id(), msgId);
                     break;
 
                 case R.id.timeline_item_pingback:
+                    // TODO: Answer tweet
                     break;
 
                 case R.id.timeline_item_retweet:
+                    // TODO: retweet
                     break;
                 }
 
